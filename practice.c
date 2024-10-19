@@ -80,6 +80,7 @@ int main() {
 
     return 0;
 }
+// chatgpt
 // #include <stdio.h>
 // #define SIZE 8
 // // Function to initialize the board
