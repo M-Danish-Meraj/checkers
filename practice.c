@@ -1,169 +1,104 @@
 #include <stdio.h>
-int main()
-{
-      printf(" A B C D E F G H\n");
-    for(int row=0;row<8;row++)
-    {
-        printf("%d ",row+1);
-            for (int  col = 0; col < 8; col++)
-                {
-            if(row <= 2 && (row + col) % 2 == 1)
-                printf("\033[33mY\033[0m"); 
-            else if(row >= 5 && (row + col) % 2 == 1)
-                printf("\033[31m\033[0m");
-            else {
-                printf("  ");}
-        
-                }
-         printf("\n");
+
+#define EMPTY ' '
+#define BLACK 'B'
+#define RED 'R'
+
+void boardcall(char board[8][8]) {
+    // Print column indices
+    printf("  ");
+    for (int i = 0; i < 8; i++) {
+        printf("%d ", i);  // Print column numbers
     }
-    return 0;
+    printf("\n");
+
+    // Print the board with row indices
+    for (int i = 0; i < 8; i++) {
+        printf("%d ", i);  // Print row number
+        for (int j = 0; j < 8; j++) {
+            if (board[i][j] == BLACK) {
+                printf("\033[34m%c\033[0m ", board[i][j]); // Blue for 'B'
+            } else if (board[i][j] == RED) {
+                printf("\033[31m%c\033[0m ", board[i][j]); // Red for 'R'
+            } else {
+                printf("%c ", board[i][j]);  // Print empty space
+            }
+        }
+        printf("\n");  // Move to the next row
+    }
 }
 
+int isValidMove(char board[8][8], int startX, int startY, int endX, int endY, char player) {
+    // Check if the move is within bounds and to an empty space
+    if (endX < 0 || endX >= 8 || endY < 0 || endY >= 8 || board[endX][endY] != EMPTY) {
+        return 0; // Invalid move
+    }
+    
+    // Check if the move is diagonal
+    if (abs(endX - startX) == 1 && abs(endY - startY) == 1) {
+        return 1; // Simple move
+    }
+    
+    // Check for capturing
+    if (abs(endX - startX) == 2 && abs(endY - startY) == 2) {
+        int midX = (startX + endX) / 2;
+        int midY = (startY + endY) / 2;
+        char opponent = (player == RED) ? BLACK : RED;
+        
+        if (board[midX][midY] == opponent) {
+            return 1; // Valid capture move
+        }
+    }
+    
+    return 0; // Invalid move
+}
 
+void makeMove(char board[8][8], int startX, int startY, int endX, int endY) {
+    // Perform the move
+    board[endX][endY] = board[startX][startY]; // Move the piece
+    board[startX][startY] = EMPTY; // Clear the old position
+    
+    // Check for capture
+    if (abs(endX - startX) == 2) {
+        int midX = (startX + endX) / 2;
+        int midY = (startY + endY) / 2;
+        board[midX][midY] = EMPTY; // Remove the captured piece
+    }
+}
 
-// #include <stdio.h>
-
-// int main() {
-//     printf("  A B C D E F G H\n"); // Print column labels
-//     for (int row = 0; row < 8; row++) {
-//         printf("%d ", row + 1); // Print row number
-//         for (int col = 0; col < 8; col++) {
-//             // Print 'B' for black pieces on alternating dark squares in top 3 rows
-//             if (row <= 2 && (row + col) % 2 == 1) {
-//                 printf("B ");
-//             }
-//             // Print 'W' for white pieces on alternating dark squares in bottom 3 rows
-//             else if (row >= 5 && (row + col) % 2 == 1) {
-//                 printf("W ");
-//             }
-//             // Print an empty square
-//             else {
-//                 printf("  ");
-//             }
-//         }
-//         printf("\n"); // Move to the next line after printing all columns in a row
-//     }
-//     return 0;
-// }
-
-    // #include <stdio.h>
-    // #define size 8
-    // int main()
-    // {
-    //     for(int i=0;i<size;i++){
-    //         if(i%2==0){
-    //             printf("%c%c",255); 
-    //         }
-    //         for(int j=0;j<size/2;j++){
-    //         printf("%c%c",219,219);  
-    //         printf("%c%c",255);    
-    //         }
-    //     }
-    //     printf("\n");
-    //     return 0;
-    // }
-#include <stdio.h>
 int main() {
-    // Print some text in different colors
-    printf("\033[31mThis is red text.\033[0m\n");       // Red text
-    printf("\033[32mThis is green text.\033[0m\n");     // Green text
-    printf("\033[33mThis is yellow text.\033[0m\n");    // Yellow text
-    printf("\033[34mThis is blue text.\033[0m\n");      // Blue text
-    printf("\033[35mThis is magenta text.\033[0m\n");   // Magenta text
-    printf("\033[36mThis is cyan text.\033[0m\n");      // Cyan text
-    printf("\033[37mThis is white text.\033[0m\n");     // White text
-    printf("\033[30mThis is black text.\033[0m\n");     // Black text
+    char board[8][8] = {
+        {' ', BLACK, ' ', BLACK, ' ', BLACK, ' ', BLACK},
+        {BLACK, ' ', BLACK, ' ', BLACK, ' ', BLACK, ' '},
+        {' ', BLACK, ' ', BLACK, ' ', BLACK, ' ', BLACK},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {'R', ' ', 'R', ' ', 'R', ' ', 'R', ' '},
+        {' ', RED, ' ', RED, ' ', RED, ' ', RED},
+        {RED, ' ', RED, ' ', RED, ' ', RED, ' '}
+    };
+    
+    int currentPlayer = 0; // 0 for RED, 1 for BLACK
+    char playerPieces[2] = {RED, BLACK};
 
-    // Resetting to default text color
-    printf("This is default text.\n");
+    while (1) {
+        boardcall(board); // Display the board
+        int startX, startY, endX, endY;
+        
+        // Ask for the player's move
+        printf("Player %c, enter your move (startX startY endX endY): ", playerPieces[currentPlayer]);
+        scanf("%d %d %d %d", &startX, &startY, &endX, &endY);
+        
+        // Validate and make the move
+        if (isValidMove(board, startX, startY, endX, endY, playerPieces[currentPlayer])) {
+            makeMove(board, startX, startY, endX, endY);
+            currentPlayer = 1 - currentPlayer; // Switch players
+        } else {
+            printf("Invalid move. Try again.\n");
+        }
+    }
 
     return 0;
 }
-// chatgpt
-// #include <stdio.h>
-// #define SIZE 8
-// // Function to initialize the board
-// void initializeBoard(char board[SIZE][SIZE]) {
-//     for (int i = 0; i < SIZE; i++) {
-//         for (int j = 0; j < SIZE; j++) {
-//             if ((i + j) % 2 == 0) {
-//                 board[i][j] = ' '; // Empty squares
-//             } else {
-//                 if (i < 3) {
-//                     board[i][j] = 'B'; // Black pieces
-//                 } else if (i > 4) {
-//                     board[i][j] = 'R'; // Red pieces
-//                 } else {
-//                     board[i][j] = ' '; // Empty squares
-//                 }
-//             }
-//         }
-//     }
-// }
-
-// // Function to display the board
-// void displayBoard(char board[SIZE][SIZE]) {
-//     printf("  A B C D E F G H\n");
-//     for (int i = 0; i < SIZE; i++) {
-//         printf("%d ", i + 1);
-//         for (int j = 0; j < SIZE; j++) {
-//             printf("%c ", board[i][j]);
-//         }
-//         printf("\n");
-//     }
-// }
-
-// // Function to check if a move is valid
-// int isValidMove(char board[SIZE][SIZE], int startX, int startY, int endX, int endY) {
-//     // Check if the end position is within bounds
-//     if (endX < 0 || endX >= SIZE || endY < 0 || endY >= SIZE) {
-//         return 0; // Invalid move
-//     }
-
-//     // Check if the destination square is empty and the move is diagonal
-//     if (board[endX][endY] == ' ' && ((endX - startX) == 1 || (endX - startX) == -1) && 
-//         ((endY - startY) == 1 || (endY - startY) == -1)) {
-//         return 1; // Valid move
-//     }
-
-//     return 0; // Invalid move
-// }
-
-// // Function to make a move
-// void makeMove(char board[SIZE][SIZE], int startX, int startY, int endX, int endY) {
-//     board[endX][endY] = board[startX][startY]; // Move the piece
-//     board[startX][startY] = ' '; // Empty the original position
-// }
-
-// // Main function
-// int main() {
-//     char board[SIZE][SIZE];
-//     initializeBoard(board);
-//     displayBoard(board);
-
-//     int startX, startY, endX, endY;
-//     char startCol, endCol;
-
-//     while (1) {
-//         printf("Enter your move (e.g., A1 B2): ");
-//         scanf(" %c%d %c%d", &startCol, &startX, &endCol, &endX);
-
-//         // Convert from chess notation to array indices
-//         startX -= 1;
-//         endX -= 1;
-//         startY = startCol - 'A';
-//         endY = endCol - 'A';
-
-//         if (isValidMove(board, startX, startY, endX, endY)) {
-//             makeMove(board, startX, startY, endX, endY);
-//             displayBoard(board);
-//         } else {
-//             printf("Invalid move. Try again.\n");
-//         }
-//     }
-
-//     return 0;
-// }
 
 
